@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  tops
+  bottoms
+  shoes
+  outerwear
+  accessories
+}
+
+enum StyleMode {
+  casual
+  office
+  date_night
+  travel
+  wedding_guest
+  streetwear
+  minimalist
+  vintage_inspired
+  trend_forward
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String?
+  displayName   String
+  avatarProfile AvatarProfile?
+  budgetProfile BudgetProfile?
+  outfits       Outfit[]
+  savedOutfits  SavedOutfit[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model AvatarProfile {
+  id         String  @id @default(cuid())
+  userId     String  @unique
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  height     String?
+  bodyBuild  String?
+  skinTone   String?
+  avatarBase String  @default("classic")
+  preferences Json?
+}
+
+model BudgetProfile {
+  id                 String     @id @default(cuid())
+  userId             String     @unique
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  minBudget          Decimal
+  maxBudget          Decimal
+  includedCategories Category[]
+  styleMode          StyleMode
+  trendPreference    Int        @default(50)
+  outfits            Outfit[]
+  updatedAt          DateTime   @updatedAt
+}
+
+model Vendor {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  sourceType     String
+  sourceMetadata Json?
+  products       Product[]
+  createdAt      DateTime @default(now())
+}
+
+model Product {
+  id                 String           @id @default(cuid())
+  vendorId           String
+  vendor             Vendor           @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  title              String
+  sourceUrl          String
+  imageUrl           String
+  price              Decimal
+  currency           String           @default("USD")
+  category           Category
+  color              String?
+  tags               String[]
+  styleTags          StyleMode[]
+  trendLabel         String?
+  trendScore         Float?
+  availability       Boolean          @default(true)
+  normalizedMetadata Json?
+  variants           ProductVariant[]
+  outfitItems        OutfitItem[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+}
+
+model ProductVariant {
+  id            String   @id @default(cuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size          String?
+  color         String?
+  priceOverride Decimal?
+  availability  Boolean  @default(true)
+}
+
+model Outfit {
+  id              String         @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  styleMode       StyleMode
+  budgetProfileId String?
+  budgetProfile   BudgetProfile? @relation(fields: [budgetProfileId], references: [id])
+  items           OutfitItem[]
+  savedSnapshots  SavedOutfit[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model OutfitItem {
+  id                 String   @id @default(cuid())
+  outfitId           String
+  outfit             Outfit   @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  productId          String
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category           Category
+  countsTowardBudget Boolean  @default(true)
+}
+
+model SavedOutfit {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outfitId     String?
+  outfit       Outfit?  @relation(fields: [outfitId], references: [id], onDelete: SetNull)
+  title        String
+  styleMode    StyleMode?
+  snapshotJson Json
+  createdAt    DateTime @default(now())
+}

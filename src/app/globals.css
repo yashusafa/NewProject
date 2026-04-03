@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+  background-image: radial-gradient(circle at top right, rgba(124, 58, 237, 0.08), transparent 45%);
+}
+
+input,
+select,
+button {
+  @apply outline-none ring-brand/40 focus:ring-2;
+}
